@@ -8,6 +8,8 @@ class BlockModel:
         self.message = message
         self.proof = 0
         self.difficulty = 0
+        self.expiration = "1m"
+        self.timestamp = 0
 
     def toJSON(self):
             return json.dumps(self, default=lambda o: o.__dict__,

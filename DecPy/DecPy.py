@@ -16,12 +16,13 @@ def apiRoute(request):
     global api
 
     try:
-        content = json.loads(request.content.read())
+        rawData = request.content.read()
+        data = json.loads(rawData)
     except:
         return ErrorResponseModel("json error", "now").toJSON()
 
     try:
-        response = api.requestHandler(content)
+        response = api.requestHandler(data, rawData)
     except Exception as e:
         print e
         return ErrorResponseModel("internal error", "now").toJSON()
@@ -43,9 +44,3 @@ if __name__ == '__main__':
 
     api = Api()
     run(ip, port)                 # Init Api
-
-
-
-
-
-

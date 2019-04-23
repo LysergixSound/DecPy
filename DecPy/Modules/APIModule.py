@@ -2,6 +2,7 @@ import time
 import json
 import requests
 import hashlib
+import mysql.connector
 
 from Models.NeighbourModel import NeighbourModel
 from Models.BlockModel import BlockModel
@@ -17,8 +18,16 @@ class Api:
         self.id = "test 1"
         self.version = "Community Test"
         self.difficulty = 2
+        self.sqlDB = mysql.connector.connect(
+          host="localhost",
+          user="dec#",
+          passwd="Hallo243!",
+          database="decdb"
+        )
+        self.sqlTable = "decdb"
+        self.sqlCursor = self.sqlDB.cursor()
 
-    def requestHandler(self, data):
+    def requestHandler(self, data, rawData):
         if "method" in data:
             print data
 
@@ -26,7 +35,6 @@ class Api:
             if data["method"] == "getInfo":
                 return self.getInfo().toJSON()
 
-            # addNeighbour
             elif data["method"] == "addNeighbour":
                 if "address" in data:
                     if self.addNeighbour(data["address"]) == True:
@@ -37,22 +45,26 @@ class Api:
             # setBlock
             elif data["method"] == "setBlock":
                 if "block" in data:
-                    if self.setBlock(data["block"]) == True:
+                    if self.setBlock(data["block"], rawData) == True:
                         return SuccessResponseModel("block is valid", time.time()).toJSON()
                     else:
+                        print "Error in block"
                         return ErrorResponseModel("block is not valid", time.time()).toJSON()
 
-            # getBlock
-            elif data["method"] == "getBlock":
-                if "block" in data:
-                    return self.getBlock(data["block"])
+            # getBlockFromHash
+            elif data["method"] == "getBlockFromHash":
+                if "hash" in data:
+                    return json.dumps(self.getBlockFromHash(data["hash"]))
 
-            # testCreateBlock
-            elif data["method"] == "createBlock":
-                if "sender" in data and "message" in data and "receiver" in data:
-                    self.createBlock(data["sender"], data["message"], data["receiver"])
-                    return SuccessResponseModel("block created", time.time()).toJSON()
+            # getBlocksFromSender
+            elif data["method"] == "getBlocksFromSender":
+                if "sender" in data:
+                    return json.dumps(self.getBlocksFromSender(data["sender"]))
 
+            # getBlocksFromReceiver
+            elif data["method"] == "getBlocksFromReceiver":
+                if "receiver" in data:
+                    return json.dumps(self.getBlocksFromReceiver(data["receiver"]))
 
         return ErrorResponseModel("no valid method", time.time()).toJSON()
 
@@ -86,17 +98,68 @@ class Api:
         for neighbour in self.neighbours:
             response = requests.post(neighbour.address, data=sendData, headers=sendHeaders)
 
-    def setBlock(self, block):
-        print block
-        isValid = self.verifiyData(json.loads(block))
-        print isValid
+    def setBlock(self, block, rawData):
+        blockObj = json.loads(block)
+        isValid = self.verifiyData(blockObj)
+        if isValid == True:
+            self.saveBlock(blockObj)
+            self.broadcast(rawData)
         return isValid
 
     def saveBlock(self, block):
-        pass
+        vals = '("' + block["blockHash"] + '", "' + block["sender"] + '", "' + block["receiver"] + '", "' + str(block["proof"]) + '", "' + str(block["difficulty"]) + '", "' + block["message"] + ', ' + block["expiration"] + ', ' + str(int(time.time()))")'
+        sqlQuery = "INSERT INTO decdb (blockHash, sender, receiver, proof, difficulty, message, expiration, timestamp) VALUES " + vals
+        self.sqlCursor.execute(sqlQuery)
 
-    def getBlock(self, block):
-        pass
+        self.sqlDB.commit()
+
+    def getBlockFromHash(self, blockHash):
+        sqlQuery = 'SELECT * FROM decdb WHERE blockHash = "' + blockHash + '"'
+        self.sqlCursor.execute(sqlQuery)
+        sqlBlocks = self.sqlCursor.fetchall()
+
+        blocks = []
+        for sqlBlock in sqlBlocks:
+            block = BlockModel(sqlBlock[1], sqlBlock[2], sqlBlock[6], sqlBlock[3])
+            block.proof = sqlBlock[4]
+            block.difficulty = sqlBlock[5]
+            block.expiration = sqlBlock[7]
+            block.timestamp = sqlBlock[8]
+            blocks.append(block.toJSON())
+
+        return blocks
+
+    def getBlocksFromSender(self, sender):
+        sqlQuery = 'SELECT * FROM decdb WHERE sender = "' + sender + '"'
+        self.sqlCursor.execute(sqlQuery)
+        sqlBlocks = self.sqlCursor.fetchall()
+
+        blocks = []
+        for sqlBlock in sqlBlocks:
+            block = BlockModel(sqlBlock[1], sqlBlock[2], sqlBlock[6], sqlBlock[3])
+            block.proof = sqlBlock[4]
+            block.difficulty = sqlBlock[5]
+            block.expiration = sqlBlock[7]
+            block.timestamp = sqlBlock[8]
+            blocks.append(block.toJSON())
+
+        return blocks
+
+    def getBlocksFromReceiver(self, receiver):
+        sqlQuery = 'SELECT * FROM decdb WHERE receiver = "' + receiver + '"'
+        self.sqlCursor.execute(sqlQuery)
+        sqlBlocks = self.sqlCursor.fetchall()
+
+        blocks = []
+        for sqlBlock in sqlBlocks:
+            block = BlockModel(sqlBlock[1], sqlBlock[2], sqlBlock[6], sqlBlock[3])
+            block.proof = sqlBlock[4]
+            block.difficulty = sqlBlock[5]
+            block.expiration = sqlBlock[7]
+            block.timestamp = sqlBlock[8]
+            blocks.append(block.toJSON())
+
+        return blocks
 
     def pingAll(self):
         self.broadcast('{"method":"getInfo"}')
@@ -120,6 +183,27 @@ class Api:
             counter += 1
 
         return block
+
+    def expireThread(self):
+        while True:
+            sqlQuery = 'SELECT * FROM decdb'
+            self.sqlCursor.execute(sqlQuery)
+            sqlBlocks = self.sqlCursor.fetchall()
+
+            for sqlBlock in sqlBlocks:
+                if "m" in sqlBlock[7]:
+                    expire = sqlBlock[8] + int(int(sqlBlock[7].replace("m", "")) * 60)
+                elif "d" in sqlBlock[7]:
+                    expire = sqlBlock[8] + int(int(sqlBlock[7].replace("d", "")) * 24 * 60 * 60)
+
+                if expire > time.time():
+                    sqlQuery = "DELETE FROM decdb WHERE blockHash = " + sqlBlock[1]
+                    self.sqlCursor.execute(sqlQuery)
+
+                    self.sqlDB.commit()
+
+
+            time.sleep(60)
 
     def createBlock(self, sender, message, receiver):
         block = BlockModel(hashlib.sha256(sender + message + receiver).hexdigest(), sender, message, receiver)
