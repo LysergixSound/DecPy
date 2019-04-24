@@ -37,19 +37,13 @@ class Api:
 
             elif data["method"] == "addNeighbour":
                 if "address" in data:
-                    if self.addNeighbour(data["address"]) == True:
-                        return SuccessResponseModel("neighbour added", time.time()).toJSON()
-                    else:
-                        return ErrorResponseModel("add neighbour failed", time.time()).toJSON()
+                    self.addNeighbour(data["address"]).toJSON()
+
 
             # setBlock
             elif data["method"] == "setBlock":
                 if "block" in data:
-                    if self.setBlock(data["block"], rawData) == True:
-                        return SuccessResponseModel("block is valid", time.time()).toJSON()
-                    else:
-                        print "Error in block"
-                        return ErrorResponseModel("block is not valid", time.time()).toJSON()
+                    self.setBlock(data["block"], rawData).toJSON()
 
             # getBlockFromHash
             elif data["method"] == "getBlockFromHash":
@@ -76,7 +70,7 @@ class Api:
         info = InfoResponseModel(self.id, time.time(), self.version)
         return info
 
-    def send(self, neighbour):
+    def send(self, neighbour, sendData):
         sendHeaders = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         response = requests.post(neighbour.address, data=sendData, headers=sendHeaders)
 
@@ -94,9 +88,8 @@ class Api:
         return False
 
     def broadcast(self, sendData):
-        sendHeaders = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         for neighbour in self.neighbours:
-            response = requests.post(neighbour.address, data=sendData, headers=sendHeaders)
+            self.send(neighbour, sendData)
 
     def setBlock(self, block, rawData):
         blockObj = json.loads(block)
@@ -104,7 +97,9 @@ class Api:
         if isValid == True:
             self.saveBlock(blockObj)
             self.broadcast(rawData)
-        return isValid
+            return SuccessResponseModel("block is valid")
+        else:
+            return ErrorResponseModel("block is not valid")
 
     def saveBlock(self, block):
         vals = '("' + block["blockHash"] + '", "' + block["sender"] + '", "' + block["receiver"] + '", "' + str(block["proof"]) + '", "' + str(block["difficulty"]) + '", "' + block["message"] + ', ' + block["expiration"] + ', ' + str(int(time.time()))")'
@@ -120,11 +115,8 @@ class Api:
 
         blocks = []
         for sqlBlock in sqlBlocks:
-            block = BlockModel(sqlBlock[1], sqlBlock[2], sqlBlock[6], sqlBlock[3])
-            block.proof = sqlBlock[4]
-            block.difficulty = sqlBlock[5]
-            block.expiration = sqlBlock[7]
-            block.timestamp = sqlBlock[8]
+            block = BlockModel()
+            block.fromSQL(sqlBlock)
             blocks.append(block.toJSON())
 
         return blocks
@@ -136,11 +128,8 @@ class Api:
 
         blocks = []
         for sqlBlock in sqlBlocks:
-            block = BlockModel(sqlBlock[1], sqlBlock[2], sqlBlock[6], sqlBlock[3])
-            block.proof = sqlBlock[4]
-            block.difficulty = sqlBlock[5]
-            block.expiration = sqlBlock[7]
-            block.timestamp = sqlBlock[8]
+            block = BlockModel()
+            block.fromSQL(sqlBlock)
             blocks.append(block.toJSON())
 
         return blocks
@@ -152,11 +141,8 @@ class Api:
 
         blocks = []
         for sqlBlock in sqlBlocks:
-            block = BlockModel(sqlBlock[1], sqlBlock[2], sqlBlock[6], sqlBlock[3])
-            block.proof = sqlBlock[4]
-            block.difficulty = sqlBlock[5]
-            block.expiration = sqlBlock[7]
-            block.timestamp = sqlBlock[8]
+            block = BlockModel()
+            block.fromSQL(sqlBlock)
             blocks.append(block.toJSON())
 
         return blocks
@@ -218,8 +204,8 @@ class Api:
                 neighbour.id = self.getNeighbourId(neighbour)
                 self.neighbours.append(neighbour)
 
-                return True
-            else:
-                return False
+                return SuccessResponseModel("neighbour added")   
         except:
-            return False
+            pass
+
+        return ErrorResponseModel("add neighbour failed")
