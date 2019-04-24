@@ -42,5 +42,5 @@ if __name__ == '__main__':
         ip = "192.168.0.57"
         port = 6967
 
-    #api = Api()
-    #run(ip, port)                 # Init Api
+    api = Api()
+    run(ip, port)                 # Init Api
