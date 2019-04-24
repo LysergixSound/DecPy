@@ -42,4 +42,8 @@
 				);
 			[MYSQL] exit
 
-[]
+[*PYTHON* Dependencies]
+	- pip install requests
+	- pip install twisted
+	- pip install klein
+	- pip install mysql-connector

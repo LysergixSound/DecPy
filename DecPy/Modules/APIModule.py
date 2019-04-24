@@ -20,11 +20,11 @@ class Api:
         self.difficulty = 2
         self.sqlDB = mysql.connector.connect(
           host="localhost",
-          user="dec#",
+          user="node",
           passwd="Hallo243!",
-          database="decdb"
+          database="statefree"
         )
-        self.sqlTable = "decdb"
+        self.sqlTable = "data"
         self.sqlCursor = self.sqlDB.cursor()
 
     def requestHandler(self, data, rawData):
