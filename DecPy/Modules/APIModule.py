@@ -119,7 +119,7 @@ class Api:
             return False
 
     def getBlockFromHash(self, blockHash):
-        sqlQuery = 'SELECT * FROM decdb WHERE blockHash = "' + blockHash + '"'
+        sqlQuery = 'SELECT * FROM ' + self.sqlDataTable + ' WHERE blockHash = "' + blockHash + '"'
         self.sqlCursor.execute(sqlQuery)
         sqlBlocks = self.sqlCursor.fetchall()
 
@@ -132,7 +132,7 @@ class Api:
         return blocks
 
     def getBlocksFromSender(self, sender):
-        sqlQuery = 'SELECT * FROM decdb WHERE sender = "' + sender + '"'
+        sqlQuery = 'SELECT * FROM ' + self.sqlDataTable + ' WHERE sender = "' + sender + '"'
         self.sqlCursor.execute(sqlQuery)
         sqlBlocks = self.sqlCursor.fetchall()
 
@@ -145,7 +145,7 @@ class Api:
         return blocks
 
     def getBlocksFromReceiver(self, receiver):
-        sqlQuery = 'SELECT * FROM decdb WHERE receiver = "' + receiver + '"'
+        sqlQuery = 'SELECT * FROM ' + self.sqlDataTable + ' WHERE receiver = "' + receiver + '"'
         self.sqlCursor.execute(sqlQuery)
         sqlBlocks = self.sqlCursor.fetchall()
 

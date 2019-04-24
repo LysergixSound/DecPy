@@ -9,7 +9,7 @@ from Models.ResponseModels import ErrorResponseModel
 from Models.ResponseModels import SuccessResponseModel
 from Models.ResponseModels import InfoResponseModel
 
-def proofOfWork(self, block, difficulty):
+def proofOfWork(block, difficulty):
         counter = 0
         while True:
             proofResult = block.blockHash + str(counter)
@@ -28,15 +28,15 @@ def proofOfWork(self, block, difficulty):
             counter += 1
 
         return block
-def createBlock(self, address, sender, receiver, expiration, message, difficulty):
+def createBlock(address, sender, receiver, expiration, message, difficulty):
         block = BlockModel(hashlib.sha256(sender + message + receiver).hexdigest(), sender, receiver, message, 0, 0, expiration, int(time.time()))
         block = proofOfWork(block, difficulty)
         blockRequest = json.dumps({"method":"setBlock", "block":block.toJSON()})
         send(address, blockRequest)
-def send(self, address, sendData):
+def send(address, sendData):
         sendHeaders = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         response = requests.post(address, data=sendData, headers=sendHeaders)
 
 
-address = "http//192.168.0.61:6969"
+address = "http://192.168.0.61:6965"
 createBlock(address, "me", "you", "1m", "hello", 2)
