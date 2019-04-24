@@ -67,7 +67,7 @@ class Api:
         pass
 
     def getInfo(self):
-        info = InfoResponseModel(self.id, time.time(), self.version)
+        info = InfoResponseModel(self.id, self.version)
         return info
 
     def send(self, neighbour, sendData):
