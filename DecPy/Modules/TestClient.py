@@ -39,5 +39,5 @@ def send(address, sendData):
         print response.text
 
 
-address = "http://192.168.0.61:6963"
+address = "http://192.168.0.61:6962"
 createBlock(address, "me", "you", "1m", "hello", 2)
