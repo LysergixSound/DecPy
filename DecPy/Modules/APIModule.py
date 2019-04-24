@@ -38,12 +38,12 @@ class Api:
             # addNeighbour
             elif data["method"] == "addNeighbour":
                 if "address" in data:
-                    self.addNeighbour(data["address"]).toJSON()
+                    return self.addNeighbour(data["address"]).toJSON()
 
             # setBlock
             elif data["method"] == "setBlock":
                 if "block" in data:
-                    self.setBlock(data["block"], rawData).toJSON()
+                    return self.setBlock(data["block"], rawData).toJSON()
 
             # getBlockFromHash
             elif data["method"] == "getBlockFromHash":

@@ -36,7 +36,8 @@ def createBlock(address, sender, receiver, expiration, message, difficulty):
 def send(address, sendData):
         sendHeaders = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         response = requests.post(address, data=sendData, headers=sendHeaders)
+        print response.text
 
 
-address = "http://192.168.0.61:6965"
+address = "http://192.168.0.61:6963"
 createBlock(address, "me", "you", "1m", "hello", 2)
