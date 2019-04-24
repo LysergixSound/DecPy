@@ -102,7 +102,7 @@ class Api:
             return ErrorResponseModel("block is not valid")
 
     def saveBlock(self, block):
-        vals = '("' + block["blockHash"] + '", "' + block["sender"] + '", "' + block["receiver"] + '", "' + str(block["proof"]) + '", "' + str(block["difficulty"]) + '", "' + block["message"] + ', ' + block["expiration"] + ', ' + str(int(time.time()))")'
+        vals = '("' + block["blockHash"] + '", "' + block["sender"] + '", "' + block["receiver"] + '", "' + str(block["proof"]) + '", "' + str(block["difficulty"]) + '", "' + block["message"] + ', ' + block["expiration"] + ', ' + str(int(time.time())) + ')'
         sqlQuery = "INSERT INTO decdb (blockHash, sender, receiver, proof, difficulty, message, expiration, timestamp) VALUES " + vals
         self.sqlCursor.execute(sqlQuery)
 
