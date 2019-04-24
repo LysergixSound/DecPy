@@ -199,6 +199,7 @@ class Api:
                     print "Day"
                     expire = sqlBlock[8] + int(int(sqlBlock[7].replace("d", "")) * 24 * 60 * 60)
 
+                print expire
                 if expire > time.time():
                     print "DELETE: " + sqlBlock[1]
                     sqlQuery = "DELETE FROM " + self.sqlDataTable + " WHERE blockHash = " + sqlBlock[1]
