@@ -21,7 +21,7 @@ class Api:
         self.sqlDB = mysql.connector.connect(
           host="localhost",
           user="node",
-          passwd="Hallo243!",
+          passwd="hallo243",
           database="statefree"
         )
         self.sqlTable = "data"
