@@ -2,6 +2,7 @@ import time
 import json
 import requests
 import hashlib
+import threading
 import mysql.connector
 
 from Models.NeighbourModel import NeighbourModel
@@ -26,6 +27,8 @@ class Api:
         )
         self.sqlDataTable = "data"
         self.sqlCursor = self.sqlDB.cursor()
+
+        threading.Thread(target = self.expireThread).start()
 
     def requestHandler(self, data, rawData):
         if "method" in data:
@@ -182,10 +185,11 @@ class Api:
 
     def expireThread(self):
         while True:
-            sqlQuery = 'SELECT * FROM decdb'
+            sqlQuery = 'SELECT * FROM ' + self.sqlDataTable
             self.sqlCursor.execute(sqlQuery)
             sqlBlocks = self.sqlCursor.fetchall()
 
+            print "CHECK EXPIRATION"
             for sqlBlock in sqlBlocks:
                 if "m" in sqlBlock[7]:
                     expire = sqlBlock[8] + int(int(sqlBlock[7].replace("m", "")) * 60)
@@ -193,7 +197,8 @@ class Api:
                     expire = sqlBlock[8] + int(int(sqlBlock[7].replace("d", "")) * 24 * 60 * 60)
 
                 if expire > time.time():
-                    sqlQuery = "DELETE FROM decdb WHERE blockHash = " + sqlBlock[1]
+                    print "DELETE: " + sqlBlock[1]
+                    sqlQuery = "DELETE FROM " + self.sqlDataTable + " WHERE blockHash = " + sqlBlock[1]
                     self.sqlCursor.execute(sqlQuery)
 
                     self.sqlDB.commit()
