@@ -24,7 +24,7 @@ class Api:
           passwd="hallo243",
           database="statefree"
         )
-        self.sqlTable = "data"
+        self.sqlDataTable = "data"
         self.sqlCursor = self.sqlDB.cursor()
 
     def requestHandler(self, data, rawData):
@@ -35,10 +35,10 @@ class Api:
             if data["method"] == "getInfo":
                 return self.getInfo().toJSON()
 
+            # addNeighbour
             elif data["method"] == "addNeighbour":
                 if "address" in data:
                     self.addNeighbour(data["address"]).toJSON()
-
 
             # setBlock
             elif data["method"] == "setBlock":
@@ -96,17 +96,27 @@ class Api:
         isValid = self.verifiyData(blockObj)
         if isValid == True:
             self.saveBlock(blockObj)
-            self.broadcast(rawData)
-            return SuccessResponseModel("block is valid")
+            if self.broadcast(rawData):
+                return SuccessResponseModel("block is valid")
+            else:
+                return ErrorResponseModel("block already exists")
         else:
             return ErrorResponseModel("block is not valid")
 
     def saveBlock(self, block):
-        vals = '("' + block["blockHash"] + '", "' + block["sender"] + '", "' + block["receiver"] + '", "' + str(block["proof"]) + '", "' + str(block["difficulty"]) + '", "' + block["message"] + ', ' + block["expiration"] + ', ' + str(int(time.time())) + ')'
-        sqlQuery = "INSERT INTO decdb (blockHash, sender, receiver, proof, difficulty, message, expiration, timestamp) VALUES " + vals
+        sqlQuery = 'SELECT * FROM ' + self.sqlDataTable + ' WHERE blockHash = "' + block["blockHash"] + '"'
         self.sqlCursor.execute(sqlQuery)
+        sqlBlocks = self.sqlCursor.fetchall()
 
-        self.sqlDB.commit()
+        if sqlBlocks:
+            vals = '("' + block["blockHash"] + '", "' + block["sender"] + '", "' + block["receiver"] + '", "' + str(block["proof"]) + '", "' + str(block["difficulty"]) + '", "' + block["message"] + ', ' + block["expiration"] + ', ' + str(int(time.time())) + ')'
+            sqlQuery = "INSERT INTO " + self.sqlDataTable + " (blockHash, sender, receiver, proof, difficulty, message, expiration, timestamp) VALUES " + vals
+            self.sqlCursor.execute(sqlQuery)
+
+            self.sqlDB.commit()
+            return True
+        else:
+            return False
 
     def getBlockFromHash(self, blockHash):
         sqlQuery = 'SELECT * FROM decdb WHERE blockHash = "' + blockHash + '"'
@@ -191,8 +201,8 @@ class Api:
 
             time.sleep(60)
 
-    def createBlock(self, sender, message, receiver):
-        block = BlockModel(hashlib.sha256(sender + message + receiver).hexdigest(), sender, message, receiver)
+    def createBlock(self, sender, message, receiver, expiration):
+        block = BlockModel(hashlib.sha256(sender + message + receiver).hexdigest(), sender, receiver, message, 0, 0, expiration, int(time.time()))
         block = self.proofOfWork(block, self.difficulty)
         blockRequest = json.dumps({"method":"setBlock", "block":block.toJSON()})
         self.broadcast(blockRequest)
