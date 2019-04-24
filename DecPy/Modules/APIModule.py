@@ -191,9 +191,12 @@ class Api:
 
             print "CHECK EXPIRATION"
             for sqlBlock in sqlBlocks:
+                print sqlBlock[7]
                 if "m" in sqlBlock[7]:
+                    print "Minute"
                     expire = sqlBlock[8] + int(int(sqlBlock[7].replace("m", "")) * 60)
                 elif "d" in sqlBlock[7]:
+                    print "Day"
                     expire = sqlBlock[8] + int(int(sqlBlock[7].replace("d", "")) * 24 * 60 * 60)
 
                 if expire > time.time():
