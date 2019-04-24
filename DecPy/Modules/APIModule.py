@@ -109,7 +109,7 @@ class Api:
         sqlBlocks = self.sqlCursor.fetchall()
 
         if len(sqlBlocks) == 0:
-            vals = '("' + block["blockHash"] + '", "' + block["sender"] + '", "' + block["receiver"] + '", "' + str(block["proof"]) + '", "' + str(block["difficulty"]) + '", "' + block["message"] + ', ' + block["expiration"] + ', ' + str(int(time.time())) + ')'
+            vals = '("' + block["blockHash"] + '", "' + block["sender"] + '", "' + block["receiver"] + '", "' + str(block["proof"]) + '", "' + str(block["difficulty"]) + '", "' + block["message"] + '", "' + block["expiration"] + '", "' + str(int(time.time())) + '")'
             sqlQuery = "INSERT INTO " + self.sqlDataTable + " (blockHash, sender, receiver, proof, difficulty, message, expiration, timestamp) VALUES " + vals
             self.sqlCursor.execute(sqlQuery)
 
