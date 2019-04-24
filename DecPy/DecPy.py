@@ -19,13 +19,13 @@ def apiRoute(request):
         rawData = request.content.read()
         data = json.loads(rawData)
     except:
-        return ErrorResponseModel("json error", str(int(time.time()))).toJSON()
+        return ErrorResponseModel("json error").toJSON()
 
     try:
         response = api.requestHandler(data, rawData)
     except Exception as e:
         print e
-        return ErrorResponseModel("internal error", str(int(time.time()))).toJSON()
+        return ErrorResponseModel("internal error").toJSON()
 
     return response
 

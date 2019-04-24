@@ -60,7 +60,7 @@ class Api:
                 if "receiver" in data:
                     return json.dumps(self.getBlocksFromReceiver(data["receiver"]))
 
-        return ErrorResponseModel("no valid method", time.time()).toJSON()
+        return ErrorResponseModel("no valid method").toJSON()
 
     def getNeighbourId(self, neighbour):
         return ""
