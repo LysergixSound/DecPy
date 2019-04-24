@@ -95,11 +95,11 @@ class Api:
         blockObj = json.loads(block)
         isValid = self.verifiyData(blockObj)
         if isValid == True:
-            self.saveBlock(blockObj)
-            if self.broadcast(rawData):
+            if self.saveBlock(blockObj) == True:
                 return SuccessResponseModel("block is valid")
             else:
                 return ErrorResponseModel("block already exists")
+            self.broadcast(rawData)
         else:
             return ErrorResponseModel("block is not valid")
 
@@ -108,7 +108,7 @@ class Api:
         self.sqlCursor.execute(sqlQuery)
         sqlBlocks = self.sqlCursor.fetchall()
 
-        if sqlBlocks:
+        if len(sqlBlocks) != 0:
             vals = '("' + block["blockHash"] + '", "' + block["sender"] + '", "' + block["receiver"] + '", "' + str(block["proof"]) + '", "' + str(block["difficulty"]) + '", "' + block["message"] + ', ' + block["expiration"] + ', ' + str(int(time.time())) + ')'
             sqlQuery = "INSERT INTO " + self.sqlDataTable + " (blockHash, sender, receiver, proof, difficulty, message, expiration, timestamp) VALUES " + vals
             self.sqlCursor.execute(sqlQuery)
