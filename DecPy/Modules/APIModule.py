@@ -200,7 +200,7 @@ class Api:
                 print str(expire) + " -- " + str(time.time())
                 if expire < time.time():
                     print "DELETE: " + sqlBlock[1]
-                    sqlQuery = "DELETE FROM " + self.sqlDataTable + " WHERE blockHash = " + sqlBlock[1]
+                    sqlQuery = "DELETE FROM " + self.sqlDataTable + " WHERE blockHash = '" + sqlBlock[1] + "'"
                     self.sqlCursor.execute(sqlQuery)
 
                     self.sqlDB.commit()
